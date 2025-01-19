@@ -352,6 +352,7 @@ class NetAppOntapLUN:
             space_reserve=dict(required=False, type='bool', default=True),
             space_allocation=dict(required=False, type='bool'),
             use_exact_size=dict(required=False, type='bool', default=True),
+            is_asa_r2=dict(required=False, type='bool', default=False),
             san_application_template=dict(type='dict', options=dict(
                 use_san_application=dict(type='bool', default=True),
                 exclude_aggregates=dict(type='list', elements='str'),
@@ -961,13 +962,16 @@ class NetAppOntapLUN:
         return luns
 
     def create_lun_rest(self):
-        name = self.create_lun_path_rest()
+        if self.parameters['is_asa_r2']:
+            name = self.parameters['name']
+        else:
+            name = self.create_lun_path_rest()
         api = 'storage/luns'
         body = {
             'svm.name': self.parameters['vserver'],
             'name': name,
         }
-        if self.parameters.get('flexvol_name') is not None:
+        if self.parameters.get('flexvol_name') is not None and not self.parameters['is_asa_r2']:
             body['location.volume.name'] = self.parameters['flexvol_name']
         if self.parameters.get('qtree_name') is not None:
             body['location.qtree.name'] = self.parameters['qtree_name']
